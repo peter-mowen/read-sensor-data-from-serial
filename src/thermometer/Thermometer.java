@@ -38,31 +38,54 @@ public class Thermometer {
         SerialPort comPort = arduino;
         comPort.setComPortParameters(9600, 8, 1, 0); // default connection settings for Arduino
         comPort.setComPortTimeouts(SerialPort.TIMEOUT_WRITE_BLOCKING, 0, 0); // block until bytes can be written
-        System.out.printf("Opening serial port for %s...\n", desiredCommPort);
         
-        if (comPort.openPort()){
-            System.out.println("Port Open...");
-        } else {
-            System.out.println("Port did not open");
-            return;
-        }
         
-        comPort.setComPortTimeouts(SerialPort.TIMEOUT_READ_SEMI_BLOCKING, 100, 0);
-        InputStream in = comPort.getInputStream();
         try
         {
-           for (int j = 0; j < 1000; ++j)
-              System.out.print((char)in.read());
-           in.close();
+            String startPhrase = "Arduino Starting Up...";
+            String buffer = "";
+            int total = 0;
+            int numOfIterations = 100;
+
+            for (int i = 1; i<=numOfIterations; i++){
+                System.out.printf("Opening serial port for %s...\n", desiredCommPort);
+                if (comPort.openPort()){
+                    System.out.println("Port Open...");
+                } else {
+                    System.out.println("Port did not open");
+                    return;
+                }
+
+                comPort.setComPortTimeouts(SerialPort.TIMEOUT_READ_SEMI_BLOCKING, 100, 0);
+                InputStream in = comPort.getInputStream();
+                
+                System.out.println("Reading into buffer..");
+                for (int j = 0; j < 500; ++j){
+                    buffer = buffer + (char)in.read();
+                }
+                if (buffer.toLowerCase().contains(startPhrase.toLowerCase())){
+                    int indexOfStartPhrase = buffer.indexOf(startPhrase);
+                    total += indexOfStartPhrase;
+                } else{
+                    System.out.println("Didn't find the start phrase");
+                }
+                
+                in.close();
+                if (comPort.closePort()){
+                    System.out.println("Closing Port...");
+                } else {
+                    System.out.println("Failed to close port");
+                }
+            }
+            float averageIndex = total / numOfIterations;
+            
+            System.out.printf("The average start index was %.2f\n", averageIndex);
+            //System.out.println("Printing buffer...");
+            //System.out.println(buffer);
         } catch (Exception e) { e.printStackTrace(); }
         
         
-        if (comPort.closePort()){
-            System.out.println("Closing Port...");
-            System.out.println("Goodbye");
-        } else {
-            System.out.println("Failed to close port");
-        }
+        
         
     }
     
