@@ -6,11 +6,10 @@
 package thermometer;
 
 import com.fazecast.jSerialComm.*;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
+import java.io.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.*;
 
 /**
  *
@@ -42,11 +41,10 @@ public class Thermometer {
         SerialPort comPort = arduino;
         comPort.setComPortParameters(9600, 8, 1, 0); // default connection settings for Arduino
         comPort.setComPortTimeouts(SerialPort.TIMEOUT_WRITE_BLOCKING, 0, 0); // block until bytes can be written
-        
-        String startPhrase = "Arduino Starting Up...";
+
         System.out.printf("Opening serial port for %s...\n", desiredCommPort);
         if (comPort.openPort()){
-            System.out.println("Port Open...");
+            System.out.println("Port Open!");
         } else {
             System.out.println("Port did not open");
             return;
@@ -54,22 +52,20 @@ public class Thermometer {
 
         comPort.setComPortTimeouts(SerialPort.TIMEOUT_READ_SEMI_BLOCKING, 100, 0);
         InputStream in = comPort.getInputStream();
-        
-        // Update what keyboard interrupt does
+        System.out.println("Establishing data connection..");
+        // Update what keyboard interrupt does so program shuts down gracefully.
         Runtime.getRuntime().addShutdownHook(new Thread() 
-        {
-            @Override
-            public void run() 
-            {
+        {@Override
+            public void run(){
                 try {
-                    System.out.println("Trying to close input stream....");
+                    System.out.println("Closing input stream....");
                     in.close();
-                    System.out.println("Input stream closed");
-                    System.out.println("Trying to close serial port...");
+                    System.out.println("Input stream closed!");
+                    System.out.println("Closing serial port...");
                     if (comPort.closePort()){
-                        System.out.println("Serial Port Closed");
+                        System.out.println("Serial Port Closed!");
                     } else {
-                        System.out.println("Failed to close port");
+                        System.out.println("Failed to close port!");
                     }
                 } catch (IOException ex) {
                     System.out.println("In IOException");
@@ -81,26 +77,39 @@ public class Thermometer {
         try
         {
             String buffer = "";
+            String bufferLwr = "";
+            String startPhrase = "Arduino Starting Up...";
+            String startPhraseLwr = startPhrase.toLowerCase();
             boolean sketchStarted = false;
             
             while (true){
-                System.out.println("Reading into buffer..");
-                for (int j = 0; j < 100; ++j){
-                    int data = in.read();
-                    buffer = buffer + (char)data;
+                //System.out.println("Reading into buffer..");
+                char data = (char)in.read();
+                buffer = buffer + data;
+                //System.out.println(buffer);
+                bufferLwr = buffer.toLowerCase();
+
+                if ((!sketchStarted)&&(bufferLwr.contains(startPhraseLwr))){
+                    //System.out.println("Buffer contained start phrase!");
+                    System.out.println("Connection Established! Waiting for incoming data...");
+                    sketchStarted = true;
+                    int startPhraseIndex = buffer.indexOf(startPhrase);
+                    //System.out.print(buffer);
+                    System.out.println(buffer.substring(startPhraseIndex));
+                    buffer = "";
+                    
+                } else if ((sketchStarted)&&(buffer.trim().startsWith("@"))&&(buffer.endsWith("\n"))){
+                    //System.out.println("sketch started");
+                    if (buffer.equals("\n"))
+                        buffer = "";
+                    System.out.println(buffer.trim());
+                    buffer = "";
                 }
-                System.out.println("Printing buffer...");
-                System.out.println(buffer);
-                buffer = "";
+                //buffer = ""; // initialize buffer for new run
             }       
         } catch (Exception e) { 
             //System.out.println("While loop exception");
             //e.printStackTrace(); 
-        }
-        
-        
-        
-        
+        } 
     }
-    
 }
