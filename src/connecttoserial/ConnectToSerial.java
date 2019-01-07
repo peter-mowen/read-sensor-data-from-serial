@@ -11,7 +11,7 @@
  *  https://github.com/Fazecast/jSerialComm/wiki/Modes-of-Operation
  *  https://fazecast.github.io/jSerialComm/javadoc/com/fazecast/jSerialComm/package-summary.html
  *  https://stackoverflow.com/questions/26360541/handle-a-keyboardinterrupt-in-java#
- */
+*/
 package connecttoserial;
 
 import com.fazecast.jSerialComm.*; //https://fazecast.github.io/jSerialComm/
@@ -41,7 +41,7 @@ public class ConnectToSerial {
         // This variable could be updated if one needs to find a different board
         
         // Iterate through list of serial ports and find the arduino
-        logEntry = "Checking for %s ...";
+        logEntry = "Checking for " + desiredCommPort + "...";
         toSystemOut(logEntry);
         
         for ( SerialPort port: portList ) {
