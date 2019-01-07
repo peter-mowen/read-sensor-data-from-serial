@@ -12,19 +12,17 @@
  *  https://fazecast.github.io/jSerialComm/javadoc/com/fazecast/jSerialComm/package-summary.html
  *  https://stackoverflow.com/questions/26360541/handle-a-keyboardinterrupt-in-java#
  */
-package thermometer;
+package connecttoserial;
 
 import com.fazecast.jSerialComm.*; //https://fazecast.github.io/jSerialComm/
 import java.io.*;
 import java.sql.Timestamp;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  *
  * @author pmmowen
  */
-public class Thermometer {
+public class ConnectToSerial {
 
     public static void main(String[] args) throws UnsupportedEncodingException, IOException, InterruptedException {
         String logEntry;
