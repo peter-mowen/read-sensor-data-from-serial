@@ -16,6 +16,7 @@ package thermometer;
 
 import com.fazecast.jSerialComm.*; //https://fazecast.github.io/jSerialComm/
 import java.io.*;
+import java.sql.Timestamp;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -26,10 +27,15 @@ import java.util.logging.Logger;
 public class Thermometer {
 
     public static void main(String[] args) throws UnsupportedEncodingException, IOException, InterruptedException {
-        String timestamp;
-        System.out.println("Getting list of comm devices...");
+        String logEntry;
+        
+        logEntry = "Getting list of comm devices...";
+        toSystemOut(logEntry);
+        
         SerialPort[] portList = SerialPort.getCommPorts();
-        System.out.println("Got List of comm devices!");
+        
+        logEntry = "Got List of comm devices!";
+        toSystemOut(logEntry);
         
         SerialPort arduino = null;
         // On Windows, the arduino shows up as the following
@@ -37,31 +43,43 @@ public class Thermometer {
         // This variable could be updated if one needs to find a different board
         
         // Iterate through list of serial ports and find the arduino
-        System.out.printf("Checking for %s ...\n", desiredCommPort);
+        logEntry = "Checking for %s ...";
+        toSystemOut(logEntry);
+        
         for ( SerialPort port: portList ) {
             String portDescription = port.toString();
             String portDescLower = portDescription.toLowerCase();
             if (portDescLower.matches(desiredCommPort.toLowerCase())){
-                System.out.printf("Found %s!\n", desiredCommPort);
+                logEntry = "Found " + desiredCommPort + "!";
+                toSystemOut(logEntry);
                 arduino = port;
             }
         }
         
         // check if desired comm device was found
         if (arduino == null){
-            System.out.printf("Could not find %s\n", desiredCommPort);
-            System.out.println("Quiting Program");
+            logEntry = "Could not find " + desiredCommPort + "!";
+            toSystemOut(logEntry);
+            
+            logEntry = "Quiting Program!";
+            toSystemOut(logEntry);
+            
             System.exit(0);
         }
         SerialPort comPort = arduino;
         comPort.setComPortParameters(9600, 8, 1, 0); // default connection settings for Arduino
         comPort.setComPortTimeouts(SerialPort.TIMEOUT_WRITE_BLOCKING, 0, 0); // block until bytes can be written
-
-        System.out.printf("Opening serial port for %s...\n", desiredCommPort);
+        
+        logEntry = "Opening serial port for " + desiredCommPort + "..." ;
+        toSystemOut(logEntry);
+        
+        System.out.printf("", desiredCommPort);
         if (comPort.openPort()){
-            System.out.println("Port Open!");
+            logEntry = "Port Open!";
+            toSystemOut(logEntry);
         } else {
-            System.out.println("Port did not open");
+            logEntry = "Port did not open!";
+            toSystemOut(logEntry);
             return;
         }
         
@@ -72,25 +90,24 @@ public class Thermometer {
         Runtime.getRuntime().addShutdownHook(new Thread() 
         {@Override
             public void run(){
-                try {
-                    System.out.println("Closing input stream....");
-                    in.close();
-                    System.out.println("Input stream closed!");
-                    System.out.println("Closing serial port...");
-                    if (comPort.closePort()){
-                        System.out.println("Serial Port Closed!");
-                    } else {
-                        System.out.println("Failed to close port!");
-                    }
-                    System.exit(0);
-                } catch (IOException ex) {
-                    System.out.println("In IOException");
-                    Logger.getLogger(Thermometer.class.getName()).log(Level.SEVERE, null, ex);
+                String logEntry;
+
+                logEntry = "Closing serial port...";
+                toSystemOut(logEntry);
+
+                if (comPort.closePort()){
+                    logEntry = "Serial Port Closed!";
+                    toSystemOut(logEntry);
+                } else {
+                    logEntry = "Failed to close port!";
+                    toSystemOut(logEntry);
                 }
             }
         });
         // Listen to input stream
-        System.out.println("Establishing data connection..");
+        logEntry = "Establishing data connection...";
+        toSystemOut(logEntry);
+
         try
         {
             String buffer = "";     // initialize to hold incoming data
@@ -111,24 +128,38 @@ public class Thermometer {
 
                 if ((!startPhraseFound)&&(bufferLwr.contains(startPhraseLwr))){
                     //System.out.println("Buffer contained start phrase!");
-                    System.out.println("Connection Established! Waiting for incoming data...");
+                    logEntry = "Connection Established! Waiting for incoming data...";
+                    toSystemOut(logEntry);
+                    
                     startPhraseFound = true;
                     int startPhraseIndex = buffer.indexOf(startPhrase);
                     //System.out.print(buffer);
                     // print startPhrase
-                    System.out.println(buffer.substring(startPhraseIndex));
+                    logEntry = buffer.substring(startPhraseIndex);
+                    toSystemOut(logEntry);
                     buffer = "";        // re-initialize buffer for next run
                 } else if ((startPhraseFound)&&(buffer.trim().startsWith(beginDataFlag))&&(buffer.endsWith(endDataFlag))){
                     //System.out.println("sketch started");
                     if (buffer.equals("\n"))
                         buffer = "";    // re-initialize buffer to save space.
-                    System.out.println(buffer.trim());
+                    logEntry = buffer.trim().substring(1);
+                    toSystemOut(logEntry);
                     buffer = "";        // re-initialize buffer for next run
                 }
             }       
         } catch (Exception e) { 
-            System.out.println("While loop exception");
-            e.printStackTrace(); 
+            //System.out.println("While loop exception");
+            //e.printStackTrace(); 
         } 
+    }
+    private static String getTimestamp(){
+        Timestamp timestamp = new Timestamp(System.currentTimeMillis());
+        String timestampStr = timestamp.toString();
+        return timestampStr;
+    }
+    
+    private static void toSystemOut(String logEntry){
+        String timestamp = getTimestamp();
+        System.out.printf("%s\t%s\n", timestamp, logEntry);
     }
 }
