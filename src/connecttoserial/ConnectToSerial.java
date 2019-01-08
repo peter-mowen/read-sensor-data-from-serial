@@ -151,7 +151,7 @@ public class ConnectToSerial {
             }       
         } catch (Exception e) { 
             //System.out.println("While loop exception");
-            //e.printStackTrace(); 
+            e.printStackTrace(); 
         } 
     }
     private static String getTimestamp(){
@@ -166,13 +166,43 @@ public class ConnectToSerial {
     }
 
     private static void toCSV(String logEntry) {
-        int date = extractDate(logEntry);        
+        int date = extractDate(logEntry);
+        //System.out.println(date);
+        int time = extractTime(logEntry);
+        //System.out.println(time);
     }
 
     private static int extractDate(String logEntry) {
         String dateStr = logEntry.substring(0, 10);
-        String dateNum = dateStr.replace("-", "");
-        int date = Integer.parseInt(dateNum);
+        String dateNumStr = dateStr.replace("-", "");
+        int date = Integer.parseInt(dateNumStr);
         return date;
+    }
+
+    private static int extractTime(String logEntry) {
+        String timeStr = logEntry.substring(11,23);
+        String lastChar = timeStr.substring(timeStr.length()-1);
+        if (isInt(lastChar)) {
+        } else {
+            timeStr = timeStr.trim() + "0"; 
+        }
+        String timeNumStr = timeStr.replace(":", "");
+        timeNumStr = timeNumStr.replace(".","");
+        int time = Integer.parseInt(timeNumStr);
+        return time;
+    }
+    
+    private static boolean isInt(String lastChar) {
+        try 
+        { 
+            Integer.parseInt(lastChar); 
+            boolean isInt = true;
+            return isInt;
+        }  
+        catch (NumberFormatException e)  
+        { 
+            boolean isInt = false;
+            return isInt;
+        } 
     }
 }
