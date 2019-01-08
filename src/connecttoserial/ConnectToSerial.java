@@ -136,12 +136,16 @@ public class ConnectToSerial {
                     logEntry = buffer.substring(startPhraseIndex);
                     toSystemOut(logEntry);
                     buffer = "";        // re-initialize buffer for next run
-                } else if ((startPhraseFound)&&(buffer.trim().startsWith(beginDataFlag))&&(buffer.endsWith(endDataFlag))){
+                } else if ((startPhraseFound)&&(buffer.trim().startsWith(beginDataFlag))
+                        &&(buffer.endsWith(endDataFlag))){
                     //System.out.println("sketch started");
                     if (buffer.equals("\n"))
                         buffer = "";    // re-initialize buffer to save space.
                     logEntry = buffer.trim().substring(1);
-                    toSystemOut(logEntry);
+                    String timestamp = getTimestamp();
+                    String outdata = timestamp + "\t" + logEntry + "\n";
+                    System.out.printf("%s\t%s\n", timestamp, logEntry);
+                    toCSV(outdata);
                     buffer = "";        // re-initialize buffer for next run
                 }
             }       
@@ -159,5 +163,16 @@ public class ConnectToSerial {
     private static void toSystemOut(String logEntry){
         String timestamp = getTimestamp();
         System.out.printf("%s\t%s\n", timestamp, logEntry);
+    }
+
+    private static void toCSV(String logEntry) {
+        int date = extractDate(logEntry);        
+    }
+
+    private static int extractDate(String logEntry) {
+        String dateStr = logEntry.substring(0, 10);
+        String dateNum = dateStr.replace("-", "");
+        int date = Integer.parseInt(dateNum);
+        return date;
     }
 }
