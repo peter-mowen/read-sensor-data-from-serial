@@ -17,6 +17,11 @@ package connecttoserial;
 import com.fazecast.jSerialComm.*; //https://fazecast.github.io/jSerialComm/
 import java.io.*;
 import java.sql.Timestamp;
+import static java.lang.Math.toIntExact;
+
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.Writer;
 
 /**
  *
@@ -145,6 +150,7 @@ public class ConnectToSerial {
                     String timestamp = getTimestamp();
                     String outdata = timestamp + "\t" + logEntry + "\n";
                     System.out.printf("%s\t%s\n", timestamp, logEntry);
+                    outdata =  extractData(outdata);
                     toCSV(outdata);
                     buffer = "";        // re-initialize buffer for next run
                 }
@@ -165,11 +171,50 @@ public class ConnectToSerial {
         System.out.printf("%s\t%s\n", timestamp, logEntry);
     }
 
-    private static void toCSV(String logEntry) {
+    private static String extractData(String logEntry) throws FileNotFoundException, IOException {
+        String outdata = "";
+        
         int date = extractDate(logEntry);
         //System.out.println(date);
+        outdata = outdata + date + ", ";
+        // Trim off date
+        logEntry = logEntry.substring(10).trim();
+        //System.out.println(logEntry);
+        
         int time = extractTime(logEntry);
         //System.out.println(time);
+        outdata = outdata + time + ", ";
+        // Trim off time
+        logEntry = logEntry.substring(12).trim();
+        //System.out.println(logEntry);
+        
+        // Find number of colons to figure out how many data there are
+        long numOfColons = logEntry.chars().filter(ch -> ch == ':').count();
+        int numOfData = toIntExact(numOfColons);
+        
+        // Extract data
+        for (int i = 0; i < numOfData; i++){
+            int indexOfColon = logEntry.indexOf(":");
+            int indexOfComma = logEntry.indexOf(",");
+            String datum = "";
+            try{
+                datum = logEntry.substring(indexOfColon + 1, indexOfComma).trim();
+            } 
+            catch (Exception e){
+                datum = logEntry.substring(indexOfColon + 1).trim();
+            }
+            
+            if ( i < numOfData - 1){
+                outdata = outdata + datum + ", ";
+            } else {
+                outdata = outdata + datum + "\n";
+            }
+            
+            logEntry = logEntry.substring(indexOfComma + 1);
+            //System.out.println("End of for loop log entry: " + logEntry);
+            //System.out.println(outdata);
+        }
+        return outdata;
     }
 
     private static int extractDate(String logEntry) {
@@ -180,7 +225,7 @@ public class ConnectToSerial {
     }
 
     private static int extractTime(String logEntry) {
-        String timeStr = logEntry.substring(11,23);
+        String timeStr = logEntry.substring(0,12);
         String lastChar = timeStr.substring(timeStr.length()-1);
         if (isInt(lastChar)) {
         } else {
@@ -193,16 +238,22 @@ public class ConnectToSerial {
     }
     
     private static boolean isInt(String lastChar) {
-        try 
-        { 
+        try { 
             Integer.parseInt(lastChar); 
             boolean isInt = true;
             return isInt;
-        }  
-        catch (NumberFormatException e)  
-        { 
+        } catch (NumberFormatException e) { 
             boolean isInt = false;
             return isInt;
         } 
     }
+
+    private static void toCSV(String outdata) throws IOException {
+        String filePath = "C:\\Users\\pmmow\\Documents\\NetBeansProjects\\ConnectToSerial\\logs\\";
+        File outfile = new File(filePath + "data.csv");        
+        Writer output = new BufferedWriter(new FileWriter(outfile, true));
+        output.append(outdata);
+        output.close();
+    }
+
 }
