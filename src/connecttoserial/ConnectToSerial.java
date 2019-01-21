@@ -120,9 +120,9 @@ public class ConnectToSerial {
             String beginDataFlag = "@";
             String endDataFlag = "\n";
             
-            boolean startPhraseFound = false; // marked true once start
+            boolean startPhraseFound = false; // marked true once start phrase is found
             
-            while (true){ // this loop will repeat until keyboard interrupt
+            while (true){ // this loop will repeat until interrupt
                 //System.out.println("Reading into buffer..");
                 char data = (char)in.read();    // single incoming byte
                 buffer = buffer + data;         // add byte to buffer
@@ -136,30 +136,44 @@ public class ConnectToSerial {
                     
                     startPhraseFound = true;
                     int startPhraseIndex = buffer.indexOf(startPhrase);
+                    
                     //System.out.print(buffer);
                     // print startPhrase
+                    
                     logEntry = buffer.substring(startPhraseIndex);
                     toSystemOut(logEntry);
+                    
                     buffer = "";        // re-initialize buffer for next run
                 } else if ((startPhraseFound)&&(buffer.trim().startsWith(beginDataFlag))
                         &&(buffer.endsWith(endDataFlag))){
                     //System.out.println("sketch started");
+                    
                     if (buffer.equals("\n"))
                         buffer = "";    // re-initialize buffer to save space.
+                    
                     logEntry = buffer.trim().substring(1);
+                    
                     String timestamp = getTimestamp();
                     String outdata = timestamp + "\t" + logEntry + "\n";
                     System.out.printf("%s\t%s\n", timestamp, logEntry);
-                    outdata =  extractData(outdata);
-                    toCSV(outdata);
+                    
+                    String outdataCSV =  extractData(outdata);
+                    // extracts date and time from timesstamp and convert them to integers,
+                    //  extracts data value from logEntry
+                    //  formats date, time, and data as a CSV line
+                    
+                    toCSV(outdataCSV);
+                    
                     buffer = "";        // re-initialize buffer for next run
                 }
             }       
         } catch (Exception e) { 
             //System.out.println("While loop exception");
-            e.printStackTrace(); 
+            e.printStackTrace();
+            
         } 
     }
+    
     private static String getTimestamp(){
         Timestamp timestamp = new Timestamp(System.currentTimeMillis());
         String timestampStr = timestamp.toString();
@@ -171,7 +185,7 @@ public class ConnectToSerial {
         System.out.printf("%s\t%s\n", timestamp, logEntry);
     }
 
-    private static String extractData(String logEntry) throws FileNotFoundException, IOException {
+    private static String extractData(String logEntry){
         String outdata = "";
         
         int date = extractDate(logEntry);
@@ -196,7 +210,7 @@ public class ConnectToSerial {
         for (int i = 0; i < numOfData; i++){
             int indexOfColon = logEntry.indexOf(":");
             int indexOfComma = logEntry.indexOf(",");
-            String datum = "";
+            String datum;
             try{
                 datum = logEntry.substring(indexOfColon + 1, indexOfComma).trim();
             } 
@@ -226,10 +240,16 @@ public class ConnectToSerial {
 
     private static int extractTime(String logEntry) {
         String timeStr = logEntry.substring(0,12);
+        //timeStr = "1502165     S";
         String lastChar = timeStr.substring(timeStr.length()-1);
         if (isInt(lastChar)) {
         } else {
-            timeStr = timeStr.trim() + "0"; 
+            timeStr = timeStr.substring(0, timeStr.length()-1);
+            lastChar = timeStr.substring(timeStr.length()-1);
+            if (isInt(lastChar))
+                timeStr = timeStr.trim() + "0"; 
+            else
+                timeStr = timeStr.trim() + "00"; 
         }
         String timeNumStr = timeStr.replace(":", "");
         timeNumStr = timeNumStr.replace(".","");
