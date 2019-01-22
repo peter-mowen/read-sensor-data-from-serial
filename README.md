@@ -1,5 +1,5 @@
 # ConnectToSerial
-This Java program connects to an arduino uno, reads in data, prints it to the therminal, and writes it to a csv.
+This Java program connects to an arduino uno, reads in data, prints it to the terminal, and writes it to a csv.
 
 Is program uses the jSerialComm library to connect to the arduino's serial port. Once connected, it waits for "Arduino Starting Up..."
 to appear on the serial port. (This start phrase will need to be part of the arduino sketch). After the start phrase has been received,
