@@ -1,35 +1,28 @@
 /*
- * This program reads data in from the serial port.
- *  The desired comm Port is currently set to Arduino Uno but could potentially 
- *  be changed to another comm port. When reading from the comm port, this 
- *  program looks for a phrase that signals that good data is on the way. Once
- *  that phrase is found, the program looks for a symbol that indicates the
- *  the beginning of good data and a symbol that indicates the end of this data.
- *  New line characters coming in on the serial port are ignored.
- *  
- * Webpages I referenced writing this program include:
- *  https://github.com/Fazecast/jSerialComm/wiki/Modes-of-Operation
- *  https://fazecast.github.io/jSerialComm/javadoc/com/fazecast/jSerialComm/package-summary.html
- *  https://stackoverflow.com/questions/26360541/handle-a-keyboardinterrupt-in-java#
-*/
-package connecttoserial;
-
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package ReadSensorDataFromSerial;
 import com.fazecast.jSerialComm.*; //https://fazecast.github.io/jSerialComm/
 import java.io.*;
 import java.sql.Timestamp;
 import static java.lang.Math.toIntExact;
-
-import java.io.BufferedWriter;
-import java.io.FileWriter;
-import java.io.Writer;
+import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
  * @author pmmowen
  */
-public class ConnectToSerial {
+public class ReadSensorDataFromSerial {
 
-    public static void main(String[] args) throws UnsupportedEncodingException, IOException, InterruptedException {
+    /**
+     * @param args the command line arguments
+     * @throws java.io.IOException
+     */
+    public static void main(String[] args) throws IOException {
         String logEntry;
         
         logEntry = "Getting list of comm devices...";
@@ -97,7 +90,11 @@ public class ConnectToSerial {
 
                 logEntry = "Closing serial port...";
                 toSystemOut(logEntry);
-
+            try {
+                in.close();
+            } catch (IOException ex) {
+                Logger.getLogger(ReadSensorDataFromSerial.class.getName()).log(Level.SEVERE, null, ex);
+            }
                 if (comPort.closePort()){
                     logEntry = "Serial Port Closed!";
                     toSystemOut(logEntry);
@@ -269,7 +266,7 @@ public class ConnectToSerial {
     }
 
     private static void toCSV(String outdata) throws IOException {
-        String filePath = "C:\\Users\\pmmow\\Documents\\NetBeansProjects\\ConnectToSerial\\logs\\";
+        String filePath = "C:\\Users\\pmmow\\Documents\\Environment Monitor project\\EnvironmentMonitor\\data\\" ;
         File outfile = new File(filePath + "data.csv");        
         Writer output = new BufferedWriter(new FileWriter(outfile, true));
         output.append(outdata);
